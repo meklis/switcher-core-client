@@ -1,0 +1,29 @@
+{
+  "name": "meklis/switcher-core-client",
+  "description": "Client for switcher-core-api",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Max Boyar",
+      "email": "max.boyar.a@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Meklis\\SwCoreClient\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=7.2.0",
+    "ext-json": "*",
+    "ext-curl": "*",
+    "php-curl-class/php-curl-class": "dev-master"
+  },
+  "minimum-stability": "dev",
+  "config": {
+    "platform": {
+      "php": "7.2"
+    }
+  }
+}
