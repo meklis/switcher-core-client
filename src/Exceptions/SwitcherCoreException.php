@@ -8,6 +8,14 @@ class SwitcherCoreException extends \Exception
 {
     protected $type = 'GENERAL_API_ERROR';
 
+    protected $trace;
+
+    function __construct($message = "", $code = 0, Throwable $previous = null, $trace = [])
+    {
+        $this->trace = $trace;
+        parent::__construct($message, $code, $previous);
+    }
+
     /**
      * @return mixed
      */
@@ -27,7 +35,7 @@ class SwitcherCoreException extends \Exception
             'message' => $this->message,
             'line' => $this->line,
             'file' => $this->file,
-            'trace' => $this->getTrace(),
+            'trace' => $this->trace ? $this->trace : $this->getTrace() ,
             'previous' => $this->getPrevious(),
         ];
     }

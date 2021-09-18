@@ -9,12 +9,12 @@ class Request
      */
     protected $device;
 
-    protected $method;
+    protected $module;
     protected $arguments;
 
-    public static function init(Device $device, $method, $arguments = []) {
+    public static function init(Device $device, $module, $arguments = []) {
         $self = new self();
-        $self->setDevice($device)->setMethod($method)->setArguments($arguments);
+        $self->setDevice($device)->setModule($module)->setArguments($arguments);
         return $self;
     }
 
@@ -39,18 +39,18 @@ class Request
     /**
      * @return mixed
      */
-    public function getMethod()
+    public function getModule()
     {
-        return $this->method;
+        return $this->module;
     }
 
     /**
-     * @param mixed $method
+     * @param mixed $module
      * @return Request
      */
-    public function setMethod($method)
+    public function setModule($module)
     {
-        $this->method = $method;
+        $this->module = $module;
         return $this;
     }
 
@@ -75,9 +75,14 @@ class Request
     public function getAsArray() {
         return [
             'device' => $this->device ? $this->device->getAsArray() : null,
-            'method' => $this->method,
+            'module' => $this->module,
             'arguments' => $this->arguments
         ];
+    }
 
+    public function getHash() {
+        $arguments = $this->getArguments();
+        ksort($arguments);
+        return md5($this->device->getIp() . $this->getModule() . json_encode($arguments));
     }
 }

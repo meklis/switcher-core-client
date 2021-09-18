@@ -3,6 +3,7 @@
 namespace Meklis\SwCoreClient;
 
 use Curl\Curl;
+use Curl\MultiCurl;
 use Meklis\SwCoreClient\Exceptions\SwitcherCoreApiServerErrors;
 use Meklis\SwCoreClient\Exceptions\SwitcherCoreException;
 use Meklis\SwCoreClient\Objects\Device;
@@ -94,9 +95,9 @@ class Client
             $resp->setResponse($response['data']);
         }
         if (isset($response['error'])) {
-            throw new SwitcherCoreException($response['error']['description']);
-        } elseif ($curl->error) {
-            throw new SwitcherCoreApiServerErrors($curl->error->errorMessage, $curl->error->errorCode);
+            throw new SwitcherCoreException($response['error']['description'], 500, null, $response['error']['trace']);
+        } elseif ($curl->errorMessage) {
+            throw new SwitcherCoreApiServerErrors($curl->errorMessage, $curl->errorCode);
         };
         return $resp;
     }
@@ -118,8 +119,8 @@ class Client
         $curl->post($this->swCoreAddr . '/call-batch', $reqs);
         if (isset($curl->response['error'])) {
             throw new SwitcherCoreException($curl->response['error']['description']);
-        } elseif ($curl->error) {
-            throw new SwitcherCoreApiServerErrors($curl->error->errorMessage, $curl->error->errorCode);
+        } elseif ($curl->errorMessage) {
+            throw new SwitcherCoreApiServerErrors($curl->errorMessage, $curl->errorCode);
         }
 
         $responses = [];
@@ -134,8 +135,8 @@ class Client
                     if (isset($response['request']['device'])) {
                         $request->setDevice(Device::initFromArray($response['request']['device']));
                     }
-                    if (isset($response['request']['method'])) {
-                        $request->setMethod($response['data']['request']['method']);
+                    if (isset($response['request']['module'])) {
+                        $request->setModule($response['data']['request']['module']);
                     }
                     if (isset($response['request']['arguments'])) {
                         $request->setArguments($response['request']['arguments']);
@@ -152,12 +153,56 @@ class Client
     }
 
     /**
-     * @param Request[] $req
+     * @param Request[] $reqs
      * @return Response[]
      */
-    function callMulti(array $req)
+    function callMulti(array $reqs)
     {
+        $mcurl = new MultiCurl();
+        $mcurl->setConcurrency($this->requestConcurrency);
+        $mcurl->setTimeout($this->requestTimeoutSec);
+        $mcurl->setJsonDecoder(function ($resp) {
+            return json_decode($resp, true);
+        });
+        $responses = [];
+        foreach ($reqs as $request) {
+            $curl = new Curl();
+            $curl->setDefaultJsonDecoder($assoc = true);
+            $curl->setTimeout($this->requestTimeoutSec);
+            $curl->setHeader('Content-Type', 'application/json');
+            $curl->setUrl($this->swCoreAddr . '/call');
+            $curl->setOpt(CURLOPT_POST, true);
+            $curl->setOpt(CURLOPT_POSTFIELDS, $curl->buildPostData($request->getAsArray()));
+            $req = $mcurl->addCurl($curl);
+            $req->req = $request;
+        }
+        $mcurl->success(function ($instance) use (&$responses) {
+            $response = (new Response())
+                ->setRequest($instance->req);
+            if(isset($instance->response['data'])) {
+                $response->setResponse($instance->response['data']);
+            }
+            if(isset($instance->response['error'])) {
+                $response->setError(new SwitcherCoreApiServerErrors($instance->response['error']['message']));
+            }
+            $responses[] = $response;
+        });
+        $mcurl->error(function ($instance) use (&$responses) {
 
+            $response = (new Response())
+                ->setRequest($instance->req);
+            if(isset($instance->response['data'])) {
+                $response->setResponse($instance->response['data']);
+            }
+            if(isset($instance->response['error'])) {
+                $response->setError(new SwitcherCoreApiServerErrors($instance->response['error']['message']));
+            } elseif ($instance->errorMessage) {
+                $response->setError(new SwitcherCoreApiServerErrors($instance->errorMessage, $instance->errorCode));
+            }
+            $responses[] = $response;
+        });
+        $mcurl->start();
+        return $responses;
     }
 
 
@@ -178,8 +223,8 @@ class Client
         $curl->get($this->swCoreAddr . '/model/' . $modelKey);
         if (isset($curl->response['error'])) {
             throw new SwitcherCoreException($curl->response['error']['description']);
-        } elseif ($curl->error) {
-            throw new SwitcherCoreApiServerErrors($curl->error->errorMessage, $curl->error->errorCode);
+        } elseif ($curl->errorMessage) {
+            throw new SwitcherCoreApiServerErrors($curl->errorMessage, $curl->errorCode);
         };
         return DeviceModelData::initFromArray($curl->response['data']);
     }
@@ -199,8 +244,8 @@ class Client
         $curl->post($this->swCoreAddr . '/detect', $device->getAsArray());
         if (isset($curl->response['error'])) {
             throw new SwitcherCoreException($curl->response['error']['description']);
-        } elseif ($curl->error) {
-            throw new SwitcherCoreApiServerErrors($curl->error->errorMessage, $curl->error->errorCode);
+        } elseif ($curl->errorMessage) {
+            throw new SwitcherCoreApiServerErrors($curl->errorMessage, $curl->errorCode);
         };
 
         return DeviceModelData::initFromArray($curl->response['data']);

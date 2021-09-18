@@ -2,6 +2,7 @@
   "name": "meklis/switcher-core-client",
   "description": "Client for switcher-core-api",
   "type": "library",
+  "version": "1.0",
   "license": "MIT",
   "authors": [
     {
@@ -20,7 +21,6 @@
     "ext-curl": "*",
     "php-curl-class/php-curl-class": "dev-master"
   },
-  "minimum-stability": "dev",
   "config": {
     "platform": {
       "php": "7.2"
