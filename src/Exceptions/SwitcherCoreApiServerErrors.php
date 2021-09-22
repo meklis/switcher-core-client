@@ -16,7 +16,13 @@ class SwitcherCoreApiServerErrors extends SwitcherCoreException
         return $this->type;
     }
 
+    function __construct($message = "", $code = 0, Throwable $previous = null, $trace = [])
+    {
+        parent::__construct($message, $code, $previous, $trace);
+    }
+
     public function getAsArray() {
+
         return [
             'type' => $this->type,
             'message' => $this->message,

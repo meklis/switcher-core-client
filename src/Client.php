@@ -167,7 +167,6 @@ class Client
         $responses = [];
         foreach ($reqs as $request) {
             $curl = new Curl();
-            $curl->setDefaultJsonDecoder($assoc = true);
             $curl->setTimeout($this->requestTimeoutSec);
             $curl->setHeader('Content-Type', 'application/json');
             $curl->setUrl($this->swCoreAddr . '/call');
@@ -188,14 +187,13 @@ class Client
             $responses[] = $response;
         });
         $mcurl->error(function ($instance) use (&$responses) {
-
             $response = (new Response())
                 ->setRequest($instance->req);
             if(isset($instance->response['data'])) {
                 $response->setResponse($instance->response['data']);
             }
             if(isset($instance->response['error'])) {
-                $response->setError(new SwitcherCoreApiServerErrors($instance->response['error']['message']));
+                $response->setError(new SwitcherCoreApiServerErrors($instance->response['error']['description'], $instance->errorCode, null, $instance->response['error']['trace']));
             } elseif ($instance->errorMessage) {
                 $response->setError(new SwitcherCoreApiServerErrors($instance->errorMessage, $instance->errorCode));
             }

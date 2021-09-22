@@ -28,9 +28,9 @@ class Response
     }
 
     /**
-     * @return SwitcherCoreException
+     * @return SwitcherCoreException | null
      */
-    public function getError(): SwitcherCoreException
+    public function getError()
     {
         return $this->error;
     }
@@ -66,7 +66,7 @@ class Response
     /**
      * @return array
      */
-    public function getResponse(): array
+    public function getResponse()
     {
         return $this->response;
     }

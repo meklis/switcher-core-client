@@ -8,6 +8,9 @@ class SwitcherCoreException extends \Exception
 {
     protected $type = 'GENERAL_API_ERROR';
 
+    /**
+     * @var array|mixed
+     */
     protected $trace;
 
     function __construct($message = "", $code = 0, Throwable $previous = null, $trace = [])
