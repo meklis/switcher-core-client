@@ -11,6 +11,7 @@ class DeviceModelData
     protected $detect;
     protected $device_type;
     protected $modules;
+    protected $module_classes;
 
     /**
      * @return mixed
@@ -155,6 +156,7 @@ class DeviceModelData
             'detect' => $this->detect,
             'device_type' => $this->device_type,
             'modules' => $this->modules,
+            'module_classes' => $this->module_classes,
         ];
     }
 }
