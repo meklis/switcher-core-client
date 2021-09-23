@@ -128,16 +128,16 @@ class DeviceModelData
      */
     public function getDeviceType()
     {
-        return $this->deviceType;
+        return $this->device_type;
     }
 
     /**
-     * @param mixed $deviceType
+     * @param mixed $device_type
      * @return DeviceModelData
      */
-    public function setDeviceType($deviceType)
+    public function setDeviceType($device_type)
     {
-        $this->deviceType = $deviceType;
+        $this->device_type = $device_type;
         return $this;
     }
 
