@@ -16,6 +16,26 @@ class DeviceModelData
     /**
      * @return mixed
      */
+    public function getModuleClasses()
+    {
+        return $this->module_classes;
+    }
+
+    /**
+     * @param mixed $module_classes
+     * @return DeviceModelData
+     */
+    public function setModuleClasses($module_classes)
+    {
+        $this->module_classes = $module_classes;
+        return $this;
+    }
+    
+    
+
+    /**
+     * @return mixed
+     */
     public function getName()
     {
         return $this->name;
