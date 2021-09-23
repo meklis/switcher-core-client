@@ -9,6 +9,7 @@ use Meklis\SwCoreClient\Exceptions\SwitcherCoreException;
 use Meklis\SwCoreClient\Objects\Device;
 use Meklis\SwCoreClient\Objects\DeviceConnectionMetaData;
 use Meklis\SwCoreClient\Objects\DeviceModelData;
+use Meklis\SwCoreClient\Objects\ModuleData;
 use Meklis\SwCoreClient\Objects\Request;
 use Meklis\SwCoreClient\Objects\Response;
 
@@ -247,6 +248,24 @@ class Client
         };
 
         return DeviceModelData::initFromArray($curl->response['data']);
+    }
+
+    function getModulesList() {
+        $curl = new Curl();
+        $curl->setDefaultJsonDecoder($assoc = true);
+        $curl->setHeader('Content-Type', 'application/json');
+        $curl->setTimeout($this->requestTimeoutSec);
+        $curl->get($this->swCoreAddr . '/modules');
+        if (isset($curl->response['error'])) {
+            throw new SwitcherCoreException($curl->response['error']['description']);
+        } elseif ($curl->errorMessage) {
+            throw new SwitcherCoreApiServerErrors($curl->errorMessage, $curl->errorCode);
+        };
+        $modules = [];
+        foreach ($curl->response['data'] as $d) {
+            $modules[] = ModuleData::init($d['name'], $d['arguments'], $d['description']);
+        }
+        return $modules;
     }
 
 }
