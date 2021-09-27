@@ -64,7 +64,7 @@ class Response
     }
 
     /**
-     * @return array
+     * @return mixed
      */
     public function getResponse()
     {
@@ -72,10 +72,10 @@ class Response
     }
 
     /**
-     * @param array $response
+     * @param $response
      * @return Response
      */
-    public function setResponse(array $response): Response
+    public function setResponse($response): Response
     {
         $this->response = $response;
         return $this;
