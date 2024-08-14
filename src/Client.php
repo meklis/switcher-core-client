@@ -100,6 +100,8 @@ class Client
         } elseif ($curl->errorMessage) {
             throw new SwitcherCoreApiServerErrors($curl->errorMessage, $curl->errorCode);
         };
+        $curl->close();
+        $curl = null;
         return $resp;
     }
 
@@ -150,6 +152,8 @@ class Client
                 $responses[] = $resp;
             }
         }
+        $curl->close();
+        $curl = null;
         return $responses;
     }
 
@@ -211,6 +215,7 @@ class Client
                 }
                 $responses[] = $response;
             }
+            $instance = null;
         });
         $mcurl->error(function ($instance) use (&$responses) {
             foreach ($instance->req as $req) {
@@ -223,8 +228,11 @@ class Client
                 }
                 $responses[] = $response;
             }
+            $instance = null;
         });
         $mcurl->start();
+        $mcurl->close();
+        $mcurl = null;
         return $responses;
     }
 
