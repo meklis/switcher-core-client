@@ -166,16 +166,24 @@ class Client
             return json_decode($resp, true);
         });
         $responses = [];
+
+        //Group requests by device
+        $requests = [];
         foreach ($reqs as $request) {
+            $requests[$request->getDevice()->getIp()][] = $request;
+        }
+
+        foreach ($requests as $request) {
             $curl = new Curl();
             $curl->setTimeout($this->requestTimeoutSec);
             $curl->setHeader('Content-Type', 'application/json');
-            $curl->setUrl($this->swCoreAddr . '/call');
+            $curl->setUrl($this->swCoreAddr . '/call-batch');
             $curl->setOpt(CURLOPT_POST, true);
-            $curl->setOpt(CURLOPT_POSTFIELDS, $curl->buildPostData($request->getAsArray()));
+            $curl->setOpt(CURLOPT_POSTFIELDS, $curl->buildPostData($request));
             $req = $mcurl->addCurl($curl);
             $req->req = $request;
         }
+
         $mcurl->success(function ($instance) use (&$responses) {
             $response = (new Response())
                 ->setRequest($instance->req);
