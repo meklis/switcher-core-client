@@ -167,11 +167,12 @@ class Client
         });
         $responses = [];
 
-        //Group requests by device
+
         $requests = [];
         foreach ($reqs as $request) {
             $requests[$request->getDevice()->getIp()][] = $request;
         }
+
 
         foreach ($requests as $request) {
             $curl = new Curl();
@@ -179,34 +180,49 @@ class Client
             $curl->setHeader('Content-Type', 'application/json');
             $curl->setUrl($this->swCoreAddr . '/call-batch');
             $curl->setOpt(CURLOPT_POST, true);
-            $curl->setOpt(CURLOPT_POSTFIELDS, $curl->buildPostData($request));
+            $curl->setOpt(CURLOPT_POSTFIELDS, $curl->buildPostData(array_map(function ($e) {return $e->getAsArray();}, $request)));
             $req = $mcurl->addCurl($curl);
-            $req->req = $request;
+            $requestsHash = [];
+            foreach ($request as $reqH) {
+                $args = $reqH->getArguments();
+                ksort($args);
+                $requestsHash["{$reqH->getDevice()->getIp()}:{$reqH->getModule()}:".md5(json_encode($args))] = $reqH;
+            }
+            $req->req = $requestsHash;
         }
-
         $mcurl->success(function ($instance) use (&$responses) {
-            $response = (new Response())
-                ->setRequest($instance->req);
-            if(isset($instance->response['data'])) {
-                $response->setResponse($instance->response['data']);
+            if(!isset($instance->response['data'])) {
+                throw new \Exception("Error Processing Request", 1);
             }
-            if(isset($instance->response['error'])) {
-                $response->setError(new SwitcherCoreApiServerErrors($instance->response['error']['message']));
+            foreach ($instance->response['data'] as $resp) {
+                $args = $resp['request']['arguments'];
+                ksort($args);
+                $hash = "{$resp['request']['device']['ip']}:{$resp['request']['module']}:".md5(json_encode($args));
+                if(!isset($instance->req[$hash])) {
+                    throw new \Exception("Cannot find request by $hash");
+                }
+                $response = (new Response())
+                    ->setRequest($instance->req[$hash]);
+                if(isset($resp['data'])) {
+                    $response->setResponse($resp['data']);
+                }
+                if(isset($resp['error'])) {
+                    $response->setError(new SwitcherCoreApiServerErrors($resp['error']['message']));
+                }
+                $responses[] = $response;
             }
-            $responses[] = $response;
         });
         $mcurl->error(function ($instance) use (&$responses) {
-            $response = (new Response())
-                ->setRequest($instance->req);
-            if(isset($instance->response['data'])) {
-                $response->setResponse($instance->response['data']);
+            foreach ($instance->req as $req) {
+                $response = (new Response())
+                    ->setRequest($req);
+                if(isset($instance->response['error'])) {
+                    $response->setError(new SwitcherCoreApiServerErrors($instance->response['error']['description'], $instance->errorCode, null, $instance->response['error']['trace']));
+                } elseif ($instance->errorMessage) {
+                    $response->setError(new SwitcherCoreApiServerErrors($instance->errorMessage, $instance->errorCode));
+                }
+                $responses[] = $response;
             }
-            if(isset($instance->response['error'])) {
-                $response->setError(new SwitcherCoreApiServerErrors($instance->response['error']['description'], $instance->errorCode, null, $instance->response['error']['trace']));
-            } elseif ($instance->errorMessage) {
-                $response->setError(new SwitcherCoreApiServerErrors($instance->errorMessage, $instance->errorCode));
-            }
-            $responses[] = $response;
         });
         $mcurl->start();
         return $responses;
