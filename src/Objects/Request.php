@@ -12,6 +12,8 @@ class Request
     protected $module;
     protected $arguments;
 
+    protected $from = 'device';
+
     public static function init(Device $device, $module, $arguments = []) {
         $self = new self();
         $self->setDevice($device)->setModule($module)->setArguments($arguments);
@@ -76,7 +78,8 @@ class Request
         return [
             'device' => $this->device ? $this->device->getAsArray() : null,
             'module' => $this->module,
-            'arguments' => $this->arguments
+            'arguments' => $this->arguments,
+            'from' => $this->from ? $this->from : 'device',
         ];
     }
 
@@ -85,4 +88,23 @@ class Request
         ksort($arguments);
         return md5($this->device->getIp() . $this->getModule() . json_encode($arguments));
     }
+
+    /**
+     * @return mixed
+     */
+    public function getFrom()
+    {
+        return $this->from;
+    }
+
+    /**
+     * @param mixed $from
+     */
+    public function setFrom($from)
+    {
+        $this->from = $from;
+        return $this;
+    }
+
+
 }
