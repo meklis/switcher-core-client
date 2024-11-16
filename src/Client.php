@@ -139,7 +139,7 @@ class Client
                         $request->setDevice(Device::initFromArray($response['request']['device']));
                     }
                     if (isset($response['request']['module'])) {
-                        $request->setModule($response['data']['request']['module']);
+                        $request->setModule($response['request']['module']);
                     }
                     if (isset($response['request']['arguments'])) {
                         $request->setArguments($response['request']['arguments']);
